@@ -9,6 +9,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/progressbar"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rancher/wrangler/pkg/merr"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -70,6 +71,8 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
+			logrus.Warnf("Tag to Push: %v", tag)
+			logrus.Warnf("Parsed Tag to Push: %v", parsedTag)
 			creds, err := imagesource.GetCreds(c)
 			if err != nil {
 				return err
@@ -78,10 +81,12 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
+			logrus.Warnf("auth: %v", auth)
 			prog, err := c.ImagePush(cmd.Context(), tag, &client.ImagePushOptions{
 				Auth: auth,
 			})
 			if err != nil {
+				logrus.Warnf("error from push: %v", err)
 				return err
 			}
 			if err := progressbar.Print(prog); err != nil {

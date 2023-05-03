@@ -118,11 +118,14 @@ func (c *DefaultClient) ImagePush(ctx context.Context, imageName string, opts *I
 	if opts != nil {
 		body.Auth = opts.Auth
 	}
+	logrus.Warnf("body: %v", body)
+	logrus.Warnf("client pushing %v", imageName)
 
 	image, err := c.ImageGet(ctx, imageName)
 	if err != nil {
 		return nil, err
 	}
+	logrus.Warnf("image: %v", image)
 
 	url := c.RESTClient.Get().
 		Namespace(image.Namespace).
@@ -131,14 +134,19 @@ func (c *DefaultClient) ImagePush(ctx context.Context, imageName string, opts *I
 		SubResource("push").
 		URL()
 
+	logrus.Warnf("Image URL: %v\n", url)
 	conn, _, err := c.Dialer.DialWebsocket(ctx, url.String(), nil)
 	if err != nil {
+		logrus.Warnf("failed to dial websocket with URL")
 		return nil, err
 	}
+	logrus.Warnf("dialed websocket")
 
 	if err := conn.WriteJSON(body); err != nil {
+		logrus.Warnf("failed to write body over conn")
 		return nil, err
 	}
+	logrus.Warnf("wrote body over conn")
 
 	result := make(chan ImageProgress)
 	go func() {
@@ -149,6 +157,7 @@ func (c *DefaultClient) ImagePush(ctx context.Context, imageName string, opts *I
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
 				break
 			} else if err != nil {
+				logrus.Warnf("Conn closed err: %v", err)
 				result <- ImageProgress{
 					Error: err.Error(),
 				}
@@ -157,8 +166,10 @@ func (c *DefaultClient) ImagePush(ctx context.Context, imageName string, opts *I
 
 			progress := ImageProgress{}
 			if err := json.Unmarshal(data, &progress); err == nil {
+				logrus.Warnf("progress: %v\n", progress)
 				result <- progress
 			} else {
+				logrus.Warnf("progress err: %v\n", err)
 				result <- ImageProgress{
 					Error: err.Error(),
 				}
