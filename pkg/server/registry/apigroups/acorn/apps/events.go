@@ -84,7 +84,7 @@ func (s *eventRecordingStrategy) Create(ctx context.Context, obj types.Object) (
 			Source:   event.ObjectSource(obj),
 			Observed: metav1.Now(),
 		}); err != nil {
-			logrus.Warn("Failed to record event: %w", err)
+			logrus.Warnf("Failed to record event: %w", err)
 		}
 	}()
 
@@ -106,7 +106,7 @@ func (s *eventRecordingStrategy) Delete(ctx context.Context, obj types.Object) (
 			ResourceVersion: deleted.GetResourceVersion(),
 		})
 		if err != nil {
-			logrus.Warn("Failed to generate event details, event recording disabled for request: %w", err)
+			logrus.Warnf("Failed to generate event details, event recording disabled for request: %w", err)
 			return
 		}
 		if err := s.recorder.Record(ctx, &apiv1.Event{
@@ -119,7 +119,7 @@ func (s *eventRecordingStrategy) Delete(ctx context.Context, obj types.Object) (
 			Source:   event.ObjectSource(obj),
 			Observed: metav1.Now(),
 		}); err != nil {
-			logrus.Warn("Failed to record event: %w", err)
+			logrus.Warnf("Failed to record event: %w", err)
 		}
 	}()
 
@@ -145,7 +145,7 @@ func (s *eventRecordingStrategy) Update(ctx context.Context, obj types.Object) (
 		oldSpec, newSpec := old.(*v1.AppInstance).Spec, updated.(*v1.AppInstance).Spec
 		patch, err := mergePatch(oldSpec, newSpec)
 		if err != nil {
-			logrus.Warn("Failed to generate app spec patch, event recording disabled for request: %w", err)
+			logrus.Warnf("Failed to generate app spec patch, event recording disabled for request: %w", err)
 			return
 		}
 
@@ -161,7 +161,7 @@ func (s *eventRecordingStrategy) Update(ctx context.Context, obj types.Object) (
 			Patch:           patch,
 		})
 		if err != nil {
-			logrus.Warn("Failed to generate event details, event recording disabled for request: %w", err)
+			logrus.Warnf("Failed to generate event details, event recording disabled for request: %w", err)
 			return
 		}
 
@@ -175,7 +175,7 @@ func (s *eventRecordingStrategy) Update(ctx context.Context, obj types.Object) (
 			Source:   event.ObjectSource(obj),
 			Observed: metav1.Now(),
 		}); err != nil {
-			logrus.Warn("Failed to record event: %w", err)
+			logrus.Warnf("Failed to record event: %w", err)
 		}
 	}()
 

@@ -23,11 +23,6 @@ func (r RecorderFunc) Record(ctx context.Context, e *apiv1.Event) error {
 
 func NewRecorder(c kclient.Client) RecorderFunc {
 	return func(ctx context.Context, e *apiv1.Event) error {
-		id, err := ContentID(e)
-		if err != nil {
-			return fmt.Errorf("failed to generate event name from content: %w", err)
-		}
-		e.Name = id
 
 		if e.Actor == "" {
 			// Set actor from ctx if possible
@@ -38,6 +33,14 @@ func NewRecorder(c kclient.Client) RecorderFunc {
 				logrus.Debug("Ctx has no user info, generating anonymous event")
 			}
 		}
+
+		// Set a generated name based on the event content.
+		// NOTE: This is validated server-side, so it's important that this is done last, just before sending the request.
+		id, err := ContentID(e)
+		if err != nil {
+			return fmt.Errorf("failed to generate event name from content: %w", err)
+		}
+		e.Name = id
 
 		return c.Create(ctx, e)
 	}

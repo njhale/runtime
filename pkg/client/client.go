@@ -315,12 +315,9 @@ type ContainerReplicaListOptions struct {
 }
 
 type EventStreamOptions struct {
-	Filter      string     `json:"filter,omitempty"`
-	Since       *time.Time `json:"since,omitempty"`
-	Until       *time.Time `json:"until,omitempty"`
-	WithContext bool       `json:"withContext,omitempty"`
-	Watch       bool       `json:"watch,omitempty"`
-	Tail        *int       `json:"tail,omitempty"`
+	WithDetails bool `json:"withDetails,omitempty"`
+	Watch       bool `json:"watch,omitempty"`
+	Tail        *int `json:"tail,omitempty"`
 }
 
 func (o EventStreamOptions) ListOptions() *kclient.ListOptions {
@@ -331,15 +328,7 @@ func (o EventStreamOptions) ListOptions() *kclient.ListOptions {
 
 	// TODO(njhale): Only "withContext" needs to be sent to the server.
 	fs := fields.Set{
-		"filter":      o.Filter,
-		"withContext": strconv.FormatBool(o.WithContext),
-	}
-	// TODO(njhale): These may need to be hex-encoded, in which case, why not just serialize 'o' and send a single base64 encoded field value.
-	if o.Since != nil {
-		fs["since"] = o.Since.String()
-	}
-	if o.Until != nil {
-		fs["until"] = o.Until.String()
+		"withDetails": strconv.FormatBool(o.WithDetails),
 	}
 
 	listOpts.FieldSelector = fs.AsSelector()

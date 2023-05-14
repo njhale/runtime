@@ -1,4 +1,4 @@
-package events
+package event
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestEventID(t *testing.T) {
+func TestContentID(t *testing.T) {
 	for _, tt := range []struct {
 		name  string
 		equal bool
@@ -48,10 +48,10 @@ func TestEventID(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			idA, err := eventID(&tt.a)
+			idA, err := ContentID(&tt.a)
 			require.NoError(t, err)
 
-			idB, err := eventID(&tt.b)
+			idB, err := ContentID(&tt.b)
 			require.NoError(t, err)
 
 			if tt.equal {
