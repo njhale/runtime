@@ -10,7 +10,7 @@ import (
 
 type validator struct{}
 
-func (s validator) ValidateName(_ context.Context, obj runtime.Object) (result field.ErrorList) {
+func (s validator) Validate(_ context.Context, obj runtime.Object) (result field.ErrorList) {
 	e := obj.(*apiv1.Event)
 	if e.Name != "" {
 		result = append(result, field.Forbidden(
