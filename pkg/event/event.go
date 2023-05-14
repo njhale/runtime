@@ -4,6 +4,7 @@ import (
 	"context"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -39,5 +40,13 @@ func NewRecorder(c kclient.Client) RecorderFunc {
 		}
 
 		return c.Create(ctx, e)
+	}
+}
+
+func ObjectSource(obj kclient.Object) v1.EventSource {
+	return v1.EventSource{
+		Kind: obj.GetObjectKind().GroupVersionKind().Kind,
+		Name: obj.GetName(),
+		UID:  obj.GetUID(),
 	}
 }

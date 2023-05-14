@@ -1,6 +1,7 @@
 package appdefinition
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -15,29 +16,8 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-const (
-	AppImageResolutionFailureEventType = "AppImageResolutionFailure"
-	AppImageResolutionSuccessEventType = "AppImageResolutionSuccess"
-)
-
-// AppImageResolutionEventDetails captures additional info about App image resolution.
-type AppImageResolutionEventDetails struct {
-	// AppResourceVersion is the resourceVersion of the App the image is being resolved for.
-	AppResourceVersion string `json:"appResourceVersion"`
-
-	// TargetImage is the image being resolved.
-	TargetImage string `json:"targetImage,omitempty"`
-
-	// ResolvedImage is the image, post resolution.
-	// +optional
-	ResolvedImage string `json:"resolvedImage,omitempty"`
-
-	// Err the error that occurred during resolution, if any.
-	// +optional
-	Err string `json:"err,omitempty"`
-}
 
 func PullAppImage(transport http.RoundTripper, recorder event.Recorder) router.HandlerFunc {
 	return func(req router.Request, resp router.Response) error {
@@ -59,46 +39,8 @@ func PullAppImage(transport http.RoundTripper, recorder event.Recorder) router.H
 			resolvedImage string
 		)
 		defer func() {
-			details := AppImageResolutionEventDetails{
-				AppResourceVersion: req.Object.GetResourceVersion(),
-				TargetImage:        targetImage,
-				ResolvedImage:      resolvedImage,
-			}
-			e := apiv1.Event{
-				Type:     AppImageResolutionSuccessEventType,
-				Severity: v1.EventSeverityInfo,
-				// Actor: req.Ctx, TODO(njhale): Set default automatically from context in the event recorder
-				Description: fmt.Sprintf("Pulled %s (resolved from %s)", resolvedImage, targetImage),
-				Source: v1.EventSource{
-					Kind: req.GVK.Kind,
-					Name: req.Name,
-					UID:  req.Object.GetUID(),
-				},
-				Observed: metav1.Now(),
-			}
-
-			if err != nil {
-				// Capture the error
-				details.Err = err.Error()
-
-				e.Type = AppImageResolutionFailureEventType
-				e.Severity = v1.EventSeverityWarn
-				if resolvedImage == "" {
-					// Failed to resolve the target image
-					e.Description = fmt.Sprintf("Failed to resolve %s", targetImage)
-				} else {
-					// The target image was resolved, but we failed to pull the result
-					e.Description = fmt.Sprintf("Failed to pull %s (resolved from %s)", resolvedImage, targetImage)
-				}
-			}
-
-			if e.Details, err = v1.Mapify(details); err != nil {
-				logrus.Warnf("Failed to mapify event details: [%w]", err)
-			}
-
-			if err := recorder.Record(req.Ctx, &e); err != nil {
-				logrus.Warnf("Failed to record event: [%w]", err)
-			}
+			// Record the results as an event
+			recordResolutionEvent(req.Ctx, recorder, req.Object, err, targetImage, resolvedImage)
 		}()
 
 		resolvedImage, _, err = tags.ResolveLocal(req.Ctx, req.Client, appInstance.Namespace, targetImage)
@@ -168,5 +110,64 @@ func determineTargetImage(appInstance *v1.AppInstance) (string, string) {
 		} else {
 			return "", ""
 		}
+	}
+}
+
+const (
+	AppImageResolutionFailureEventType = "AppImageResolutionFailure"
+	AppImageResolutionSuccessEventType = "AppImageResolutionSuccess"
+)
+
+// AppImageResolutionEventDetails captures additional info about App image resolution.
+type AppImageResolutionEventDetails struct {
+	// AppResourceVersion is the resourceVersion of the App the image is being resolved for.
+	AppResourceVersion string `json:"appResourceVersion"`
+
+	// TargetImage is the image being resolved.
+	TargetImage string `json:"targetImage,omitempty"`
+
+	// ResolvedImage is the image, post resolution.
+	// +optional
+	ResolvedImage string `json:"resolvedImage,omitempty"`
+
+	// Err the error that occurred during resolution, if any.
+	// +optional
+	Err string `json:"err,omitempty"`
+}
+
+func recordResolutionEvent(ctx context.Context, recorder event.Recorder, obj kclient.Object, err error, targetImage, resolvedImage string) {
+	// Initialize with values for a success event
+	e := apiv1.Event{
+		Type:        AppImageResolutionSuccessEventType,
+		Severity:    v1.EventSeverityInfo,
+		Description: fmt.Sprintf("Pulled %s (resolved from %s)", resolvedImage, targetImage),
+		Source:      event.ObjectSource(obj),
+		Observed:    metav1.Now(),
+	}
+	details := AppImageResolutionEventDetails{
+		AppResourceVersion: obj.GetResourceVersion(),
+		TargetImage:        targetImage,
+		ResolvedImage:      resolvedImage,
+	}
+
+	if err != nil {
+		// It's a failure, overwrite with failure event values
+		e.Type = AppImageResolutionFailureEventType
+		e.Severity = v1.EventSeverityWarn
+		if resolvedImage == "" {
+			// Failed to resolve the target image
+			e.Description = fmt.Sprintf("Failed to resolve %s", targetImage)
+		} else {
+			// The target image was resolved, but we failed to pull the result
+			e.Description = fmt.Sprintf("Failed to pull %s (resolved from %s)", resolvedImage, targetImage)
+		}
+	}
+
+	if e.Details, err = v1.Mapify(details); err != nil {
+		logrus.Warnf("Failed to mapify event details: [%w]", err)
+	}
+
+	if err := recorder.Record(ctx, &e); err != nil {
+		logrus.Warnf("Failed to record event: [%w]", err)
 	}
 }
