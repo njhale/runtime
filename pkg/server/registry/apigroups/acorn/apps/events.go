@@ -142,7 +142,6 @@ func (s *eventRecordingStrategy) Update(ctx context.Context, obj types.Object) (
 	}
 
 	defer func() {
-		// TODO(njhale): Should I just shove these into a GenericMap directly? i.e. w/o Mapify and the anonymous struct?
 		oldSpec, newSpec := old.(*v1.AppInstance).Spec, updated.(*v1.AppInstance).Spec
 		patch, err := mergePatch(oldSpec, newSpec)
 		if err != nil {

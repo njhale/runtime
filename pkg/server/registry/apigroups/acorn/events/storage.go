@@ -27,12 +27,7 @@ func NewStorage(c kclient.WithWatch) rest.Storage {
 	// exceeding their TTL, so Delete is not supported.
 	return stores.NewBuilder(c.Scheme(), &apiv1.Event{}).
 		WithTableConverter(tables.EventConverter).
-		WithValidateCreate(&validator{}).
-		// WithValidateName(&validator{}).
-		// TODO(njhale): Add CreateListWatch to https://github.com/acorn-io/mink/blob/9a32355ec823607b5d055aaca804d95cfcc94e95/pkg/stores/builder.go#L282
-		// WithCreate(strategy).
-		// WithList(strategy).
-		// WithWatch(strategy).
+		WithValidateName(new(validator)).
 		WithCompleteCRUD(strategy).
 		Build()
 }

@@ -2,6 +2,7 @@ package event
 
 import (
 	"context"
+	"fmt"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -9,9 +10,6 @@ import (
 	"k8s.io/apiserver/pkg/endpoints/request"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-type Event struct {
-}
 
 type Recorder interface {
 	Record(context.Context, *apiv1.Event) error
@@ -25,9 +23,11 @@ func (r RecorderFunc) Record(ctx context.Context, e *apiv1.Event) error {
 
 func NewRecorder(c kclient.Client) RecorderFunc {
 	return func(ctx context.Context, e *apiv1.Event) error {
-		if e.Name == "" && e.GenerateName == "" { // TODO(njhale): This is really kludgey
-			e.GenerateName = "e-"
+		id, err := ContentID(e)
+		if err != nil {
+			return fmt.Errorf("failed to generate event name from content: %w", err)
 		}
+		e.Name = id
 
 		if e.Actor == "" {
 			// Set actor from ctx if possible
