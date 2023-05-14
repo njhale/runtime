@@ -47,18 +47,18 @@ func TestEmitEvent(t *testing.T) {
 		return obj.Status.Namespace != ""
 	})
 
-	eventContext, err := v1.Mapify(app)
+	details, err := v1.Mapify(app)
 	assert.NoError(t, err)
 
 	e := apiv1.Event{
 		Type:     "Foo",
 		Actor:    "bar",
 		Severity: v1.EventSeverityInfo,
-		Subject: v1.EventSubject{
+		Source: v1.EventSource{
 			Kind: "App",
 			Name: app.Name,
 		},
-		Context:     eventContext,
+		Details:     details,
 		Description: "A test fired, creating an App",
 		Observed:    metav1.Now(),
 	}
