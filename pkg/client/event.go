@@ -24,17 +24,15 @@ func (c *DefaultClient) EventStream(ctx context.Context, opts *EventStreamOption
 	listOpts := opts.ListOptions()
 	listOpts.Namespace = c.Namespace
 
-	current := &apiv1.EventList{}
-	if err := c.Client.List(ctx, current, listOpts); err != nil {
-		return nil, err
-	}
-
 	var (
-		w   watch.Interface
-		err error
+		current apiv1.EventList
+		w       watch.Interface
+		err     error
 	)
 	if opts.Watch {
 		w, err = c.Client.Watch(ctx, &apiv1.EventList{}, &kclient.ListOptions{})
+	} else {
+		err = c.Client.List(ctx, &current, listOpts)
 	}
 	if err != nil {
 		return nil, err
@@ -45,7 +43,11 @@ func (c *DefaultClient) EventStream(ctx context.Context, opts *EventStreamOption
 		defer close(events)
 		// Send the current set of events
 		for _, c := range current.Items {
-			events <- c
+			select {
+			case <-ctx.Done():
+				return
+			case events <- c:
+			}
 		}
 
 		if w == nil {

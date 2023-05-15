@@ -8,6 +8,7 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client/term"
+	"golang.org/x/sync/errgroup"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -509,14 +510,40 @@ func (m *MultiClient) EventList(ctx context.Context) ([]apiv1.Event, error) {
 	})
 }
 
-// func (m *MultiClient) EventStream(ctx context.Context, opts ...ClientOption[EventStreamOptions]) (<-chan apiv1.Event, error) {
-// 	// TODO(njhale): Implement me!
-// 	return nil, nil
-// }
-
 func (m *MultiClient) EventStream(ctx context.Context, opts *EventStreamOptions) (<-chan apiv1.Event, error) {
 	// TODO(njhale): Implement me!
-	return nil, nil
+	clients, err := m.Factory.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make(chan apiv1.Event)
+	g, gCtx := errgroup.WithContext(ctx)
+	for _, client := range clients {
+		c := client
+		g.Go(func() error {
+			stream, err := c.EventStream(gCtx, opts)
+			if err != nil {
+				return err
+			}
+
+			for e := range stream {
+				select {
+				case <-gCtx.Done():
+					return gCtx.Err()
+				case all <- e:
+				}
+			}
+
+			return nil
+		})
+	}
+	go func() {
+		defer close(all)
+		g.Wait()
+	}()
+
+	return all, nil
 }
 
 func (m *MultiClient) GetProject() string {

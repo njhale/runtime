@@ -14,6 +14,7 @@ type Writer interface {
 	Write(obj any)
 	Close() error
 	Err() error
+	Flush() error
 	AddFormatFunc(name string, f FormatFunc)
 }
 
@@ -23,7 +24,7 @@ type writer struct {
 	ValueFormat   string
 	err           error
 	headerPrinted bool
-	Writer        io.Writer
+	Writer        *tabwriter.Writer
 	funcMap       map[string]any
 }
 
@@ -134,6 +135,10 @@ func (t *writer) Write(obj any) {
 	}
 }
 
+func (t *writer) Flush() error {
+	return t.Writer.Flush()
+}
+
 func (t *writer) Close() error {
 	if t.closed {
 		return t.err
@@ -149,10 +154,7 @@ func (t *writer) Close() error {
 	if t.err != nil {
 		return t.err
 	}
-	if _, ok := t.Writer.(*tabwriter.Writer); ok {
-		return t.Writer.(*tabwriter.Writer).Flush()
-	}
-	return nil
+	return t.Flush()
 }
 
 func (t *writer) printTemplate(out io.Writer, templateContent string, obj any) error {

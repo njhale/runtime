@@ -314,9 +314,9 @@ type ContainerReplicaListOptions struct {
 }
 
 type EventStreamOptions struct {
-	WithDetails bool `json:"withDetails,omitempty"`
-	Watch       bool `json:"watch,omitempty"`
-	Tail        *int `json:"tail,omitempty"`
+	Details bool `json:"details,omitempty"`
+	Watch   bool `json:"watch,omitempty"`
+	Tail    *int `json:"tail,omitempty"`
 }
 
 func (o EventStreamOptions) ListOptions() *kclient.ListOptions {
@@ -327,7 +327,7 @@ func (o EventStreamOptions) ListOptions() *kclient.ListOptions {
 
 	// TODO(njhale): Only "withContext" needs to be sent to the server.
 	fs := fields.Set{
-		"withDetails": strconv.FormatBool(o.WithDetails),
+		"details": strconv.FormatBool(o.Details),
 	}
 
 	listOpts.FieldSelector = fs.AsSelector()

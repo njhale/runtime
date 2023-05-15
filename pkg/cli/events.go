@@ -5,6 +5,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/tables"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -28,18 +29,18 @@ func NewEvent(c CommandContext) *cobra.Command {
 
 # Getting Details 
   # The 'details' field provides additional information about an event.
-  # By default, this field is elided from this command's output, but can be enabled via the '--with-details' field.
-  acorn events --with-details
+  # By default, this field is elided from this command's output, but can be enabled via the '--details' flag.
+  acorn events --details
 `})
 	return cmd
 }
 
 type Events struct {
-	Tail        *int   `usage:"Return this number of latest events" short:"t"`
-	WithDetails bool   `usage:"Don't strip event details from response" short:"c"`
-	Watch       bool   `usage:"Stream events" short:"w"`
-	Output      string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
-	client      ClientFactory
+	Tail    *int   `usage:"Return this number of latest events" short:"t"`
+	Details bool   `usage:"Don't strip event details from response" short:"d"`
+	Watch   bool   `usage:"Stream events" short:"w"`
+	Output  string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+	client  ClientFactory
 }
 
 func (e *Events) Run(cmd *cobra.Command, args []string) error {
@@ -49,10 +50,12 @@ func (e *Events) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	opts := &client.EventStreamOptions{
-		Tail:        e.Tail,
-		WithDetails: e.WithDetails,
+		Tail:    e.Tail,
+		Details: e.Details,
+		Watch:   e.Watch,
 	}
 
+	logrus.Warn("before events")
 	events, err := c.EventStream(cmd.Context(), opts)
 	if err != nil {
 		return err
@@ -61,6 +64,9 @@ func (e *Events) Run(cmd *cobra.Command, args []string) error {
 	out := table.NewWriter(tables.Event, false, e.Output)
 	for event := range events {
 		out.Write(event)
+		if err := out.Flush(); err != nil {
+			return err
+		}
 	}
 
 	return out.Err()
