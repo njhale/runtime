@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"hash/fnv"
 	"strings"
+	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 )
@@ -12,15 +13,15 @@ import (
 // The returned ID is a valid kubernetes resource name (metadata.name).
 func ContentID(e *apiv1.Event) (string, error) {
 	// TODO: Reduce the field set used to generate when composite events are added.
-	// TODO(njhale): Find a better way of selecting and encoding field sets. Maybe a multi-layered io.Writer.
+	// TODO: Find a better way of selecting and encoding field sets. Maybe a multi-layered io.Writer.
 	fieldSet := strings.Join([]string{
 		e.Type,
 		string(e.Severity),
 		e.Actor,
 		e.Source.String(),
 		e.Description,
-		e.Observed.String(),
-	}, "")
+		e.Observed.UTC().Format(time.RFC3339),
+	}, ",")
 
 	h := fnv.New128a()
 	if _, err := h.Write([]byte(fieldSet)); err != nil {

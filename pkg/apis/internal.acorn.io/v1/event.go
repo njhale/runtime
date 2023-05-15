@@ -40,7 +40,6 @@ type EventInstance struct {
 	Description string `json:"description,omitempty"`
 
 	// Observed represents the time the Event was first observed.
-	// TODO(njhale): Switch to metav1.MicroTime if I can get openapi-gen to work for it.
 	Observed metav1.Time `json:"observed"`
 
 	// Details provides additional information about the cluster at the time the Event occurred.

@@ -84,7 +84,7 @@ func (s *eventRecordingStrategy) Create(ctx context.Context, obj types.Object) (
 			Source:   event.ObjectSource(obj),
 			Observed: metav1.Now(),
 		}); err != nil {
-			logrus.Warnf("Failed to record event: %w", err)
+			logrus.Warnf("Failed to record event: %s", err.Error())
 		}
 	}()
 
@@ -119,7 +119,7 @@ func (s *eventRecordingStrategy) Delete(ctx context.Context, obj types.Object) (
 			Source:   event.ObjectSource(obj),
 			Observed: metav1.Now(),
 		}); err != nil {
-			logrus.Warnf("Failed to record event: %w", err)
+			logrus.Warnf("Failed to record event: %s", err.Error())
 		}
 	}()
 
