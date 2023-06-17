@@ -43,6 +43,24 @@ GOTESTSUM_VERSION ?= v1.10.0
 test:
 	go run gotest.tools/gotestsum@$(GOTESTSUM_VERSION) --format testname $(TEST_FLAGS) -- $(GO_TEST_FLAGS) ./...
 
+
+.PHONY: integration
+integration:
+	# go run gotest.tools/gotestsum@$(GOTESTSUM_VERSION) --format testname --jsonfile integration.json -- -v -count=1 -parallel=16 -run='^TestVolume$$' ./integration/run/...
+	go run gotest.tools/gotestsum@$(GOTESTSUM_VERSION) --format testname --jsonfile integration.json -- -v -count=1 -parallel=4 ./integration/run/...
+
+GOTESTSUM ?= go run gotest.tools/gotestsum@$(GOTESTSUM_VERSION)
+.PHONY: slowest 
+slowest:
+	cat integration.json | $(GOTESTSUM) tool slowest 
+
+.PHONY: clean-k3d
+clean-k3d:
+	k3d cluster delete runtime-integration &>/dev/null
+	k3d cluster create runtime-integration --api-port 6550 -p "80:80@loadbalancer"
+	acorn install
+
+
 goreleaser:
 	goreleaser build --snapshot --single-target --rm-dist
 
