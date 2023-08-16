@@ -312,7 +312,9 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 		}
 		return err
 	}
-	opts.DeployArgs = deployArgs
+	opts.DeployArgs = &v1.GenericMap{
+		Data: deployArgs,
+	}
 
 	if s.Output != "" {
 		app := client.ToApp(c.GetNamespace(), image, &opts)
@@ -351,10 +353,12 @@ func (s *Run) update(ctx context.Context, c client.Client, imageSource imagesour
 			return nil, false, err
 		}
 		updateOpts.Image = image
-		updateOpts.DeployArgs = deployArgs
+		updateOpts.DeployArgs = &v1.GenericMap{
+			Data: deployArgs,
+		}
 	} else if len(imageSource.Args) > 0 {
 		imageSource.Image = app.Status.AppImage.Name
-		if _, updateOpts.DeployArgs, err = imageSource.GetImageAndDeployArgs(ctx, c); err != nil {
+		if _, updateOpts.DeployArgs.Data, err = imageSource.GetImageAndDeployArgs(ctx, c); err != nil {
 			return nil, false, err
 		}
 	}

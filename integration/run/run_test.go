@@ -916,8 +916,10 @@ func TestDeployParam(t *testing.T) {
 		},
 		Spec: v1.AppInstanceSpec{
 			Image: image.ID,
-			DeployArgs: map[string]any{
-				"someInt": 5,
+			DeployArgs: &v1.GenericMap{
+				Data: map[string]any{
+					"someInt": 5,
+				},
 			},
 		},
 	})
@@ -1470,8 +1472,10 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 			// run curl to test the connection
 			app, err := check.client.AppRun(ctx, check.imageID, &client.AppRunOptions{
 				Name: check.name,
-				DeployArgs: map[string]any{
-					"address": check.podIP,
+				DeployArgs: &v1.GenericMap{
+					Data: map[string]any{
+						"address": check.podIP,
+					},
 				},
 			})
 			if err != nil {

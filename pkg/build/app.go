@@ -99,7 +99,7 @@ func getContextFromAppImage(dataFiles appdefinition.DataFiles, appImage *v1.AppI
 	if err := addFile(tempDir, ".dockerignore", "Dockerfile\n.dockerignore"); err != nil {
 		return "", err
 	}
-	if len(appImage.BuildArgs) > 0 {
+	if len(appImage.BuildArgs.Data) > 0 {
 		if err := addFile(tempDir, appdefinition.BuildDataFile, appImage.BuildArgs); err != nil {
 			return "", err
 		}

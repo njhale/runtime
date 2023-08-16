@@ -244,7 +244,9 @@ func updateApp(ctx context.Context, c client.Client, appName string, client v1.D
 	update := opts.Run.ToUpdate()
 	update.DevSessionClient = &client
 	update.Image = image
-	update.DeployArgs = deployArgs
+	update.DeployArgs = &v1.GenericMap{
+		Data: deployArgs,
+	}
 	update.Replace = opts.Replace
 	update.Stop = new(bool)
 	update.AutoUpgrade = new(bool)
@@ -273,7 +275,9 @@ func createApp(ctx context.Context, client client.Client, hash clientHash, image
 		})
 
 	runArgs := opts.Run
-	runArgs.DeployArgs = deployArgs
+	runArgs.DeployArgs = &v1.GenericMap{
+		Data: deployArgs,
+	}
 	runArgs.Stop = z.Pointer(true)
 
 	app, err := rulerequest.PromptRun(ctx, client, opts.Dangerous, image, runArgs)

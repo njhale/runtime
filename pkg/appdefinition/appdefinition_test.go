@@ -336,8 +336,8 @@ acorns: {
 	assert.Equal(t, "", buildSpec.Acorns["afull"].Image)
 	assert.Equal(t, "sub/dir2", buildSpec.Acorns["afull"].Build.Context)
 	assert.Equal(t, "sub/dir3/Acornfile", buildSpec.Acorns["afull"].Build.Acornfile)
-	assert.Equal(t, "value", buildSpec.Acorns["afull"].Build.BuildArgs["key"])
-	assert.Equal(t, map[string]any{"key3": "value3"}, buildSpec.Acorns["afull"].Build.BuildArgs["key2"])
+	assert.Equal(t, "value", buildSpec.Acorns["afull"].Build.BuildArgs.Data["key"])
+	assert.Equal(t, map[string]any{"key3": "value3"}, buildSpec.Acorns["afull"].Build.BuildArgs.Data["key2"])
 	assert.Equal(t, "done", buildSpec.Acorns["anone"].Image)
 }
 
@@ -2026,8 +2026,10 @@ acorns: first: {
 		Name:  "c",
 		Value: "d",
 	}, acorn.Environment[1])
-	assert.Equal(t, v1.GenericMap{
-		"foo": int64(12),
+	assert.Equal(t, &v1.GenericMap{
+		Data: map[string]any{
+			"foo": int64(12),
+		},
 	}, acorn.DeployArgs)
 	assert.Equal(t, []string{"abc", "def"}, acorn.Profiles)
 }
@@ -2095,7 +2097,9 @@ acorns: first: {
 		Context:   "abc",
 		Acornfile: "other/Acornfile",
 		BuildArgs: v1.GenericMap{
-			"a": "b",
+			Data: map[string]any{
+				"a": "b",
+			},
 		},
 	}, acorn.Build)
 	assert.Equal(t, v1.PortBinding{
@@ -2228,9 +2232,11 @@ services: job: {
 			Target: "sbar",
 		},
 	}, svc.Secrets)
-	assert.Equal(t, v1.GenericMap{
-		"foo": map[string]any{
-			"hi": "bye",
+	assert.Equal(t, &v1.GenericMap{
+		Data: map[string]any{
+			"foo": map[string]any{
+				"hi": "bye",
+			},
 		},
 	}, svc.Data)
 
@@ -2255,8 +2261,10 @@ services: job: {
 	assert.Equal(t, int64(44000000000), *acorn.Memory[""])
 	assert.Equal(t, "foo", acorn.Environment[0].Name)
 	assert.Equal(t, "bar", acorn.Environment[0].Value)
-	assert.Equal(t, v1.GenericMap{
-		"key": "value",
+	assert.Equal(t, &v1.GenericMap{
+		Data: map[string]any{
+			"key": "value",
+		},
 	}, acorn.ServiceArgs)
 
 	job := appSpec.Services["job"]

@@ -27,12 +27,16 @@ func TestContentID(t *testing.T) {
 			equal: true,
 			a: apiv1.Event{
 				Details: v1.GenericMap{
-					"info": "1",
+					Data: map[string]any{
+						"info": "1",
+					},
 				},
 			},
 			b: apiv1.Event{
 				Details: v1.GenericMap{
-					"info": 1,
+					Data: map[string]any{
+						"info": 1,
+					},
 				},
 			},
 		},

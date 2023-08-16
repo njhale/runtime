@@ -165,9 +165,11 @@ func TestAppUpdate(t *testing.T) {
 				Service: "other-service2",
 			},
 		},
-		DeployArgs: map[string]any{
-			"param1": "val1",
-			"param2": "val2",
+		DeployArgs: &v1.GenericMap{
+			Data: map[string]any{
+				"param1": "val1",
+				"param2": "val2",
+			},
 		},
 	})
 	if err != nil {
@@ -227,9 +229,11 @@ func TestAppUpdate(t *testing.T) {
 				Service: "other-service3",
 			},
 		},
-		DeployArgs: map[string]any{
-			"param2": "val3",
-			"param3": "val3",
+		DeployArgs: &v1.GenericMap{
+			Data: map[string]any{
+				"param2": "val3",
+				"param3": "val3",
+			},
 		},
 	})
 	if err != nil {
@@ -302,10 +306,12 @@ func TestAppUpdate(t *testing.T) {
 		},
 	}, thirdApp.Spec.Links)
 
-	assert.Equal(t, v1.GenericMap{
-		"param1": "val1",
-		"param2": "val3",
-		"param3": "val3",
+	assert.Equal(t, &v1.GenericMap{
+		Data: map[string]any{
+			"param1": "val1",
+			"param2": "val3",
+			"param3": "val3",
+		},
 	}, thirdApp.Spec.DeployArgs)
 
 	assert.Equal(t, imageID2, thirdApp.Spec.Image)
@@ -447,8 +453,10 @@ func TestAppRun(t *testing.T) {
 				Target: "secretRequest",
 			},
 		},
-		DeployArgs: map[string]any{
-			"key": "value",
+		DeployArgs: &v1.GenericMap{
+			Data: map[string]any{
+				"key": "value",
+			},
 		},
 		PublishMode: v1.PublishModeAll,
 	})
@@ -461,7 +469,7 @@ func TestAppRun(t *testing.T) {
 	assert.Equal(t, v1.PublishModeAll, app.Spec.PublishMode)
 	assert.Equal(t, "volume", app.Spec.Volumes[0].Volume)
 	assert.Equal(t, "secret", app.Spec.Secrets[0].Secret)
-	assert.Equal(t, "value", app.Spec.DeployArgs["key"])
+	assert.Equal(t, "value", app.Spec.DeployArgs.Data["key"])
 }
 
 func TestAppRunImageVariations(t *testing.T) {

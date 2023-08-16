@@ -22,7 +22,11 @@ func ParseAppImage(req router.Request, resp router.Response) error {
 		return nil
 	}
 
-	appDef, _, err = appDef.WithArgs(appInstance.Spec.DeployArgs, appInstance.Spec.GetProfiles(appInstance.Status.GetDevMode()))
+	var args map[string]any
+	if appInstance.Spec.DeployArgs != nil {
+		args = appInstance.Spec.DeployArgs.Data
+	}
+	appDef, _, err = appDef.WithArgs(args, appInstance.Spec.GetProfiles(appInstance.Status.GetDevMode()))
 	if err != nil {
 		status.Error(err)
 		return nil

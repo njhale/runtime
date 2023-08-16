@@ -165,7 +165,11 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 			}
 		}
 
-		imageDetails, err := s.getImageDetails(ctx, app.Namespace, app.Spec.GetProfiles(app.Status.GetDevMode()), app.Spec.DeployArgs, image)
+		var args map[string]any
+		if app.Spec.DeployArgs != nil {
+			args = app.Spec.DeployArgs.Data
+		}
+		imageDetails, err := s.getImageDetails(ctx, app.Namespace, app.Spec.GetProfiles(app.Status.GetDevMode()), args, image)
 		if err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "image"), app.Spec.Image, err.Error()))
 			return
@@ -813,7 +817,9 @@ func (s *Validator) resolveLocalImage(ctx context.Context, namespace, image stri
 
 func (s *Validator) getImageDetails(ctx context.Context, namespace string, profiles []string, args map[string]any, image string) (*apiv1.ImageDetails, error) {
 	details := &apiv1.ImageDetails{
-		DeployArgs:    args,
+		DeployArgs: &v1.GenericMap{
+			Data: args,
+		},
 		Profiles:      profiles,
 		IncludeNested: true,
 	}

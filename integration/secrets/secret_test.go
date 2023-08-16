@@ -166,8 +166,10 @@ func TestEncryptionEndToEnd(t *testing.T) {
 	}
 
 	app, err := c1.AppRun(context.Background(), image.ID, &client.AppRunOptions{
-		DeployArgs: map[string]any{
-			"encdata": output,
+		DeployArgs: &v1.GenericMap{
+			Data: map[string]any{
+				"encdata": output,
+			},
 		},
 	})
 	if err != nil {
@@ -201,8 +203,10 @@ func TestNamespacedDecryption(t *testing.T) {
 	}
 
 	app, err := c2.AppRun(context.Background(), image.ID, &client.AppRunOptions{
-		DeployArgs: map[string]any{
-			"encdata": encdata,
+		DeployArgs: &v1.GenericMap{
+			Data: map[string]any{
+				"encdata": encdata,
+			},
 		},
 	})
 	if err != nil {
@@ -237,8 +241,10 @@ func TestMultiKeyDecryptionEndToEnd(t *testing.T) {
 	}
 
 	app, err := c1.AppRun(context.Background(), image.ID, &client.AppRunOptions{
-		DeployArgs: map[string]any{
-			"encdata": encdata,
+		DeployArgs: &v1.GenericMap{
+			Data: map[string]any{
+				"encdata": encdata,
+			},
 		},
 	})
 	if err != nil {

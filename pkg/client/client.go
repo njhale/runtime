@@ -99,7 +99,7 @@ type AppUpdateOptions struct {
 	Env                 []v1.NameValue
 	Profiles            []string
 	Permissions         []v1.Permissions
-	DeployArgs          map[string]any
+	DeployArgs          *v1.GenericMap
 	Stop                *bool
 	Image               string
 	TargetNamespace     string
@@ -128,7 +128,7 @@ type AppRunOptions struct {
 	Env                 []v1.NameValue
 	Profiles            []string
 	TargetNamespace     string
-	DeployArgs          map[string]any
+	DeployArgs          *v1.GenericMap
 	Stop                *bool
 	Permissions         []v1.Permissions
 	AutoUpgrade         *bool
