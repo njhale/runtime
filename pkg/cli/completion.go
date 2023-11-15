@@ -247,10 +247,15 @@ func volumesCompletion(ctx context.Context, c client.Client, toComplete string) 
 	}
 
 	var result []string
+	matches, wildcard := client.WildcardMatcher(toComplete)
 	for _, volume := range volumes {
-		if strings.HasPrefix(volume.Name, toComplete) {
+		if matches(volume.Name) {
 			result = append(result, volume.Name)
 		}
+	}
+
+	if len(result) > 0 && wildcard {
+		result = append(result, toComplete)
 	}
 
 	return result, nil
@@ -263,10 +268,15 @@ func secretsCompletion(ctx context.Context, c client.Client, toComplete string) 
 	}
 
 	var result []string
+	matches, wildcard := client.WildcardMatcher(toComplete)
 	for _, secret := range secrets {
-		if strings.HasPrefix(secret.Name, toComplete) {
+		if matches(secret.Name) {
 			result = append(result, secret.Name)
 		}
+	}
+
+	if len(result) > 0 && wildcard {
+		result = append(result, toComplete)
 	}
 
 	return result, nil

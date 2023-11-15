@@ -206,6 +206,13 @@ func (d *DeferredClient) SecretDelete(ctx context.Context, name string) (*apiv1.
 	return d.Client.SecretDelete(ctx, name)
 }
 
+func (d *DeferredClient) SecretsDelete(ctx context.Context, name string) ([]apiv1.Secret, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.SecretsDelete(ctx, name)
+}
+
 func (d *DeferredClient) ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error) {
 	if err := d.create(); err != nil {
 		return nil, err
@@ -281,6 +288,13 @@ func (d *DeferredClient) VolumeDelete(ctx context.Context, name string) (*apiv1.
 		return nil, err
 	}
 	return d.Client.VolumeDelete(ctx, name)
+}
+
+func (d *DeferredClient) VolumesDelete(ctx context.Context, name string) ([]apiv1.Volume, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.VolumesDelete(ctx, name)
 }
 
 func (d *DeferredClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {

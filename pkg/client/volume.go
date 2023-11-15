@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"sort"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
@@ -38,17 +39,67 @@ func (c *DefaultClient) VolumeGet(ctx context.Context, name string) (*apiv1.Volu
 }
 
 func (c *DefaultClient) VolumeDelete(ctx context.Context, name string) (*apiv1.Volume, error) {
-	// get first to ensure the namespace matches
+	// Get first to ensure the namespace matches
 	v, err := c.VolumeGet(ctx, name)
 	if apierror.IsNotFound(err) {
 		return nil, nil
 	}
+
 	return v, c.Client.Delete(ctx, &apiv1.Volume{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: c.Namespace,
 		},
 	})
+}
+
+func (c *DefaultClient) VolumesDelete(ctx context.Context, name string) ([]apiv1.Volume, error) {
+	var volumes []apiv1.Volume
+	if matches, wildcard := WildcardMatcher(name); wildcard {
+		all, err := c.VolumeList(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if len(all) < 1 {
+			return nil, nil
+		}
+
+		for _, v := range all {
+			if matches(v.Name) {
+				volumes = append(volumes, v)
+			}
+		}
+	} else {
+		v, err := c.VolumeGet(ctx, name)
+		if apierror.IsNotFound(err) {
+			return nil, nil
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		volumes = append(volumes, *v)
+	}
+
+	var (
+		deleted []apiv1.Volume
+		errs    []error
+	)
+	for _, v := range volumes {
+		if err := c.Client.Delete(ctx, &apiv1.Volume{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      v.Name,
+				Namespace: c.Namespace,
+			},
+		}); !apierror.IsNotFound(err) && err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		deleted = append(deleted, v)
+	}
+
+	return deleted, errors.Join(errs...)
 }
 
 func (c *DefaultClient) VolumeClassList(ctx context.Context) ([]apiv1.VolumeClass, error) {

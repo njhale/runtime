@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"sort"
 	"strings"
 
@@ -79,8 +80,8 @@ func (c *DefaultClient) SecretList(ctx context.Context) ([]apiv1.Secret, error) 
 	return result.Items, nil
 }
 
-func (c *DefaultClient) SecretDelete(ctx context.Context, serverAddress string) (*apiv1.Secret, error) {
-	secret, err := c.SecretGet(ctx, serverAddress)
+func (c *DefaultClient) SecretDelete(ctx context.Context, name string) (*apiv1.Secret, error) {
+	secret, err := c.SecretGet(ctx, name)
 	if apierrors.IsNotFound(err) {
 		return nil, nil
 	} else if err != nil {
@@ -97,4 +98,50 @@ func (c *DefaultClient) SecretDelete(ctx context.Context, serverAddress string) 
 		return secret, nil
 	}
 	return secret, err
+}
+
+func (c *DefaultClient) SecretsDelete(ctx context.Context, name string) ([]apiv1.Secret, error) {
+	var secrets []apiv1.Secret
+	if matches, wildcard := WildcardMatcher(name); wildcard {
+		all, err := c.SecretList(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, s := range all {
+			if matches(s.Name) {
+				secrets = append(secrets, s)
+			}
+		}
+	} else {
+		s, err := c.SecretGet(ctx, name)
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		secrets = append(secrets, *s)
+	}
+
+	var (
+		deleted []apiv1.Secret
+		errs    []error
+	)
+	for _, s := range secrets {
+		if err := c.Client.Delete(ctx, &apiv1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      s.Name,
+				Namespace: c.Namespace,
+			},
+		}); !apierrors.IsNotFound(err) && err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		deleted = append(deleted, s)
+	}
+
+	return deleted, errors.Join(errs...)
 }

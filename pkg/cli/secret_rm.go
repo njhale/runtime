@@ -30,12 +30,14 @@ func (a *SecretDelete) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, secret := range args {
-		deleted, err := client.SecretDelete(cmd.Context(), secret)
+		deleted, err := client.SecretsDelete(cmd.Context(), secret)
 		if err != nil {
 			return fmt.Errorf("deleting %s: %w", secret, err)
 		}
-		if deleted != nil {
-			fmt.Println(secret)
+		if len(deleted) > 0 {
+			for _, s := range deleted {
+				fmt.Println(s.Name)
+			}
 		} else {
 			fmt.Printf("Error: No such secret: %s\n", secret)
 		}

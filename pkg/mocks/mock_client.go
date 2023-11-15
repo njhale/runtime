@@ -959,6 +959,21 @@ func (mr *MockClientMockRecorder) SecretUpdate(arg0, arg1, arg2 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecretUpdate", reflect.TypeOf((*MockClient)(nil).SecretUpdate), arg0, arg1, arg2)
 }
 
+// SecretsDelete mocks base method.
+func (m *MockClient) SecretsDelete(arg0 context.Context, arg1 string) ([]v1.Secret, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SecretsDelete", arg0, arg1)
+	ret0, _ := ret[0].([]v1.Secret)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecretsDelete indicates an expected call of SecretsDelete.
+func (mr *MockClientMockRecorder) SecretsDelete(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecretsDelete", reflect.TypeOf((*MockClient)(nil).SecretsDelete), arg0, arg1)
+}
+
 // VolumeClassGet mocks base method.
 func (m *MockClient) VolumeClassGet(arg0 context.Context, arg1 string) (*v1.VolumeClass, error) {
 	m.ctrl.T.Helper()
@@ -1032,6 +1047,21 @@ func (m *MockClient) VolumeList(arg0 context.Context) ([]v1.Volume, error) {
 func (mr *MockClientMockRecorder) VolumeList(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeList", reflect.TypeOf((*MockClient)(nil).VolumeList), arg0)
+}
+
+// VolumesDelete mocks base method.
+func (m *MockClient) VolumesDelete(arg0 context.Context, arg1 string) ([]v1.Volume, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VolumesDelete", arg0, arg1)
+	ret0, _ := ret[0].([]v1.Volume)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VolumesDelete indicates an expected call of VolumesDelete.
+func (mr *MockClientMockRecorder) VolumesDelete(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumesDelete", reflect.TypeOf((*MockClient)(nil).VolumesDelete), arg0, arg1)
 }
 
 // MockProjectClientFactory is a mock of ProjectClientFactory interface.

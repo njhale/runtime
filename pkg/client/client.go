@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
@@ -239,6 +240,7 @@ type Client interface {
 	SecretReveal(ctx context.Context, name string) (*apiv1.Secret, error)
 	SecretUpdate(ctx context.Context, name string, data map[string][]byte) (*apiv1.Secret, error)
 	SecretDelete(ctx context.Context, name string) (*apiv1.Secret, error)
+	SecretsDelete(ctx context.Context, name string) ([]apiv1.Secret, error)
 
 	ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error)
 	ContainerReplicaGet(ctx context.Context, name string) (*apiv1.ContainerReplica, error)
@@ -253,6 +255,7 @@ type Client interface {
 	VolumeList(ctx context.Context) ([]apiv1.Volume, error)
 	VolumeGet(ctx context.Context, name string) (*apiv1.Volume, error)
 	VolumeDelete(ctx context.Context, name string) (*apiv1.Volume, error)
+	VolumesDelete(ctx context.Context, name string) ([]apiv1.Volume, error)
 
 	ImageList(ctx context.Context) ([]apiv1.Image, error)
 	ImageGet(ctx context.Context, name string) (*apiv1.Image, error)
@@ -535,4 +538,15 @@ func (c *DefaultClient) GetNamespace() string {
 
 func (c *DefaultClient) GetClient() (kclient.WithWatch, error) {
 	return c.Client, nil
+}
+
+// WildcardMatcher returns a function that matches strings against the given wildcard pattern, and a boolean indicating
+// whether the pattern contains a wildcard.
+// Wildcards "*" are only supported as a suffix; e.g. "foo*".
+// If no wildcard is given, the pattern is treated as a prefix.
+func WildcardMatcher(pattern string) (matches func(s string) bool, wildcard bool) {
+	prefix := strings.TrimSuffix(pattern, "*")
+	return func(s string) bool {
+		return strings.HasPrefix(s, prefix)
+	}, strings.HasSuffix(pattern, "*")
 }

@@ -29,12 +29,14 @@ func (a *VolumeDelete) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, volume := range args {
-		deleted, err := c.VolumeDelete(cmd.Context(), volume)
+		deleted, err := c.VolumesDelete(cmd.Context(), volume)
 		if err != nil {
 			return fmt.Errorf("deleting %s: %w", volume, err)
 		}
-		if deleted != nil {
-			fmt.Println(volume)
+		if len(deleted) > 0 {
+			for _, v := range deleted {
+				fmt.Println(v.Name)
+			}
 		} else {
 			fmt.Printf("Error: No such volume: %s\n", volume)
 		}

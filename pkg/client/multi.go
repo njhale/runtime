@@ -313,6 +313,12 @@ func (m *MultiClient) SecretDelete(ctx context.Context, name string) (*apiv1.Sec
 	})
 }
 
+func (m *MultiClient) SecretsDelete(ctx context.Context, name string) ([]apiv1.Secret, error) {
+	return onOneList(ctx, m.Factory, name, func(name string, c Client) ([]apiv1.Secret, error) {
+		return c.SecretsDelete(ctx, name)
+	})
+}
+
 func (m *MultiClient) ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error) {
 	if opts != nil && opts.App != "" {
 		return onOneList(ctx, m.Factory, opts.App, func(name string, c Client) ([]apiv1.ContainerReplica, error) {
@@ -393,6 +399,12 @@ func (m *MultiClient) VolumeGet(ctx context.Context, name string) (*apiv1.Volume
 func (m *MultiClient) VolumeDelete(ctx context.Context, name string) (*apiv1.Volume, error) {
 	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.Volume, error) {
 		return c.VolumeDelete(ctx, name)
+	})
+}
+
+func (m *MultiClient) VolumesDelete(ctx context.Context, name string) ([]apiv1.Volume, error) {
+	return onOneList(ctx, m.Factory, name, func(name string, c Client) ([]apiv1.Volume, error) {
+		return c.VolumesDelete(ctx, name)
 	})
 }
 
